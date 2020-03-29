@@ -1,0 +1,135 @@
+$default-font: Helvetica, sans-serif;
+$default-font-size: 16px;
+$tile-width: 30%;
+$label-height: 15%;
+$gaps: 4;
+$tiles-in-row: 3;
+$float: left;
+$min-tablet: 600px;
+$min-pc: 1024px;
+
+
+.title {
+  font: $default-font;
+  font-size: 2* $default-font-size;
+}
+
+div {
+  position: relative;
+  display: flex;
+  margin: auto auto;
+  border-style: solid;
+}
+
+.tile {
+  min-height: calc(800px - 25vw);
+  height: auto;
+  float: $float;
+
+  $gap-size: (100% - $tiles-in-row*$tile-width)/$gaps;
+  margin-left: $gap-size;
+  margin-top: $gap-size;
+
+  @media screen and (max-width: $min-pc) {
+    min-height: calc(800px - 40vw);
+    $gaps: 3;
+    $tiles-in-row: 2;
+    $tile-width: 40%;
+    width: $tile-width;
+    $gap-size: (100% - $tiles-in-row*$tile-width)/$gaps;
+    margin-left: $gap-size;
+    margin-top: $gap-size;
+  }
+
+  @media screen and (max-width: $min-tablet) {
+    min-height: calc(600px - 40vw);
+    $gaps: 2;
+    $tiles-in-row: 1;
+    $tile-width: 80%;
+    width: $tile-width;
+    $gap-size: (100% - $tiles-in-row*$tile-width)/$gaps;
+    margin-left: $gap-size;
+    margin-top: $gap-size;
+  }
+
+  width: $tile-width;
+  margin-right: 0;
+  background: burlywood;
+}
+
+@media screen and (min-width: $min-tablet) and (max-width: $min-pc) {
+  #lorem {
+    $gap-size: (100% - $tiles-in-row*25%)/$gaps;
+    width: 2 * 40% + $gap-size + 1%;
+    min-height: calc(400px - 20vw);
+  }
+  .text{
+    bottom: 5%;
+  }
+}
+
+#lorem-inner {
+  background: aqua;
+}
+
+#ipsum-inner {
+  background: orangered;
+}
+
+#dolor-inner {
+  background: palevioletred;
+}
+
+.inner {
+  position: absolute;
+  margin: 0 0 auto auto;
+  right: 0;
+  width: 50%;
+  height: $label-height;
+  background: red;
+  align-items: center;
+  border-style: none none solid solid;
+}
+
+.subtitle {
+  font: $default-font;
+  font-size: 1.5* $default-font-size;
+  margin: auto auto;
+}
+
+.text {
+  position: absolute;
+  bottom: 10%;
+  margin-left: 5%;
+  margin-right: 5%;
+  width: 90%;
+  text-align: justify;
+  font: $default-font;
+  font-size: $default-font-size;
+  border: none;
+}
+
+footer {
+  clear: both;
+
+
+  @media screen and (min-height: 800px) and (min-width: 600px){
+    position: fixed;
+    margin-top: calc(100vh - 100px);
+    left: 0;
+    bottom: 0;
+  }
+
+  @media screen and (max-height: 800px), (max-width: 600px){
+    position: relative;
+    padding-top: 25px;
+    bottom: 0;
+    left: 0;
+  }
+
+
+  height: 100px;
+  width: 100%;
+  background-color: burlywood;
+  text-align: center;
+}
