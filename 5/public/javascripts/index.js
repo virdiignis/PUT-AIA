@@ -17,7 +17,6 @@ function getCookie(cname) {
 }
 
 const cart = getCookie("cart").split("|");
-console.log(cart);
 let trs = t1.children[0].children
 for (let i = 0; i < trs.length; i++) {
     if (trs[i].children.length) {
