@@ -1,0 +1,30 @@
+﻿@{ 
+    if (Session["rules"] == null) { Session["rules"] = new List<string>(); }
+    var rules = Session["rules"] as List<string>;
+
+
+    if (Request.HttpMethod == "POST")
+    {
+        rules.Add(Request["rule"]);
+        Session["rules"] = rules;
+        Response.Redirect("Rules.cshtml");
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fight Club Rules</title>
+</head>
+<body>
+    <ol>
+        @{
+            foreach (string rule in rules)
+            { <li>@rule</li>}
+            }
+    </ol>
+    <form method="post">
+        <input name="rule"/>
+        <input type="submit" value="Add"/>
+    </form>
+</body>
+</html>
