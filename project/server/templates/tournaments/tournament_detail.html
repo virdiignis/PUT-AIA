@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+    <p>
+        {% if is_creator %}
+            <a href="/edit/" class="btn btn-primary">Edit</a>
+        {% endif %}
+
+    <h2>Tournament name: <b>{{ tournament.name }}</b></h2>
+    <br>Date: <b>{{ tournament.time }}</b>
+    <br>Submission deadline:
+    <b style="color:{% if deadline_exceeded %}red{% else %}green{% endif %}">{{ tournament.application_deadline }}</b>
+    <br>Organizer:
+    <a href="{% url 'profile' tournament.creator.id %}">{{ tournament.creator.first_name }} {{ tournament.creator.last_name }}</a>
+    <br>Ranked players: <b>{{ tournament.participants.count }}/{{ tournament.max_participants }}</b>
+    </p>
+
+    {% if tournament.sponsors.all %}
+        <p>
+        <h3>Sponsors:</h3>
+        {% for sponsor in tournament.sponsors.all %}
+            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}">
+        {% endfor %}
+        </p>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'tournament_signup' tournament.id %}"
+           class="btn btn-primary {% if full or signed_up or deadline_exceeded %}disabled{% endif %}">
+            {% if signed_up %}
+                You're already signed up
+            {% elif deadline_exceeded %}
+                Submissions deadline passed
+            {% else %}
+                Sign to compete
+            {% endif %}
+        </a>
+    </p>
+{% endblock %}

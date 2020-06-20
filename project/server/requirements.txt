@@ -1,0 +1,3 @@
+six
+Pillow
+psycopg2

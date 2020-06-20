@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form target="" method="get">
+        <label>
+            Search:
+            <input type="text" name="search"/>
+        </label>
+        <input type="submit">
+    </form>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>|</th>
+            <th>Place</th>
+            <th>|</th>
+            <th>Time</th>
+        </tr>
+        {% for tournament in page_obj %}
+            <tr>
+                <td><a href={% url 'tournament_details' tournament.id %}>{{ tournament.name }}</a></td>
+                <td>|</td>
+                <td>{{ tournament.place }}</td>
+                <td>|</td>
+                <td>{{ tournament.time }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+    </div>
+{% endblock %}
