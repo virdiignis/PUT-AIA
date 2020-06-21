@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
 
+from server import settings
 from .forms import SignupForm, ParticipantForm, TournamentForm, SponsorForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
@@ -214,7 +215,9 @@ def tournament_new(request):
 
     min_date = timezone.now() + timedelta(days=1)
     context = {"form": form,
-               "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}"}
+               "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}",
+               "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API_KEY
+               }
     return render(request, "tournaments/tournament_new.html", context)
 
 
@@ -246,7 +249,9 @@ def tournament_edit(request, id):
         min_date = tournament.application_deadline
         context = {"tournament": tournament,
                    "form": form,
-                   "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}"}
+                   "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}",
+                   "GOOGLE_MAPS_API_KEY": settings.GOOGLE_MAPS_API_KEY
+                   }
         return render(request, 'tournaments/tournament_edit.html', context)
 
     elif request.method == "POST":

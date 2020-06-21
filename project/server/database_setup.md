@@ -1,4 +1,4 @@
-Project is using postgresql. Here art the commands to set it up.
+Project is using postgresql. Here are the commands to set it up.
 ```
 CREATE DATABASE tournament'
 CREATE USER tournament WITH PASSWORD 'tournament';
