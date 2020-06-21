@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>{{ encounter }}</h2>
+    {{ encounter.tournament.time }}
+    as part of
+    <a href="{% url "tournament_details" encounter.tournament_id %}">{{ encounter.tournament }}</a>
+    {% if participant and not encounter.agreed and not winner_set %}
+        <form>
+            <label>
+                Is encounter over? If so, tell us who won:
+            </label>
+            <br>
+            <div class="btn-group">
+                <a href="{% url "winner" encounter.id 1 %}" class="btn btn-primary"
+                   style="background: green">{{ encounter.participant1 }}</a>
+                <a href="{% url "winner" encounter.id 2 %}" class="btn btn-primary"
+                   style="background: red">{{ encounter.participant2 }}</a>
+            </div>
+        </form>
+    {% endif %}
+    {% if encounter.agreed %}
+        <p>
+            <b style="color: green"> {{ encounter.winner1 }} </b> won the encounter! Congratulations.
+        </p>
+    {% endif %}
+{% endblock %}

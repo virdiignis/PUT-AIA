@@ -1,20 +1,22 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import F, Q
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotModified, HttpResponseNotFound, \
     HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import ListView, DetailView
 
-from .forms import SignupForm, ParticipantForm
+from .forms import SignupForm, ParticipantForm, TournamentForm, SponsorForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
 
-from .models import Tournament, Participation
+from .models import Tournament, Participation, Encounter
 from .tokens import account_activation_token
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
@@ -41,7 +43,12 @@ def signup(request):
                 mail_subject, message, to=[to_email]
             )
             email.send()
-            return HttpResponse('Please confirm your email address to complete the registration')
+            context = {
+                "color": "green",
+                "redirect": "/",
+                "message": "Please confirm your email to complete registration."
+            }
+            return render(request, 'message_and_redirect.html', context)
     else:
         form = SignupForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -57,13 +64,19 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         login(request, user)
-        return redirect('home')
+        context = {
+            "message": "Email confirmed successfully.",
+            "color": "green",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
     else:
-        return HttpResponse('Activation link is invalid!')
-
-
-def home(request):
-    return HttpResponse("Home")
+        context = {
+            "message": "Actvation link is invalid.",
+            "color": "red",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
 
 
 class TournamentListView(ListView):
@@ -79,9 +92,10 @@ class TournamentListView(ListView):
 
         return t
 
-
-def tournament_details(request, id):
-    return HttpResponse(str(id))
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(TournamentListView, self).get_context_data()
+        context["search"] = self.request.GET.get('search', '')
+        return context
 
 
 class TournamentDetailView(DetailView):
@@ -107,35 +121,216 @@ class Profile(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["tournaments"] = Tournament.objects.filter(participants__user=context['user'])
+        context["encounters"] = Encounter.objects.filter(
+            Q(participant1__user=context["user"]) | Q(participant2__user=context["user"]))
+
         return context
 
 
-@login_required(login_url="/accounts/login")
+@login_required
 def tournament_signup(request, pk):
     try:
         tournament = Tournament.objects.get(pk=pk)
     except Tournament.DoesNotExist:
-        return HttpResponseNotFound("Requested tournament doesn't exist.")
+        context = {
+            "message": "Requested tournament doesn't exist.",
+            "color": "red",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    t_url = reverse('tournament_details', kwargs={"pk": tournament.id})
 
     if timezone.now() > tournament.application_deadline:
-        return HttpResponseForbidden("Submissions deadline passed")
+        context = {
+            "message": "Submission deadline passed.",
+            "color": "red",
+            "redirect": t_url
+        }
+        return render(request, 'message_and_redirect.html', context)
 
     try:
         Participation.objects.get(user=request.user, tournament_id=pk)
-        return HttpResponseNotModified()
+        context = {
+            "message": "You've already signed up to this tournament.",
+            "color": "green",
+            "redirect": t_url
+        }
+        return render(request, 'message_and_redirect.html', context)
     except Participation.DoesNotExist:
+
         if tournament.participants.count() == tournament.max_participants:
-            return HttpResponseForbidden("Participants limit exceeded.")
+            context = {
+                "message": "Participants limit exceeded.",
+                "color": "red",
+                "redirect": t_url
+            }
+            return render(request, 'message_and_redirect.html', context)
 
         form = ParticipantForm(request.POST or None)
+        form.initial["tournament"] = tournament
+        form.initial["user"] = request.user
 
         if form.is_valid():
-            p = Participation(user=request.user, tournament=tournament)
-            p.ranking = form.cleaned_data["ranking"]
-            p.license = form.cleaned_data["license"]
-            p.save()
-            return redirect('tournament_detail', tournament.id)
+            form.save()
+            context = {
+                "message": "Now you're signed up for a competition!",
+                "color": "green",
+                "redirect": t_url
+            }
+            return render(request, 'message_and_redirect.html', context)
 
         context = {"form": form,
                    "tournament_id": tournament.id}
         return render(request, "tournaments/participant_form.html", context)
+
+
+@login_required
+def tournament_new(request):
+    form = TournamentForm(request.POST or None)
+    form.initial['creator'] = request.user
+    form.creator = request.user
+
+    if form.is_valid():
+        tournament = form.save()
+        t_url = reverse('tournament_details', kwargs={"pk": tournament.id})
+
+        context = {
+            "message": "Tournament created successfully!",
+            "color": "green",
+            "redirect": t_url
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    min_date = timezone.now() + timedelta(days=1)
+    context = {"form": form,
+               "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}"}
+    return render(request, "tournaments/tournament_new.html", context)
+
+
+@login_required
+def tournament_edit(request, id):
+    try:
+        tournament = Tournament.objects.get(id=id)
+    except Tournament.DoesNotExist:
+        context = {
+            "message": "Tournament does not exist!",
+            "color": "red",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    t_url = reverse('tournament_details', kwargs={"pk": tournament.id})
+
+    if tournament.creator != request.user:
+        context = {
+            "message": "You're not allowed to access this page.",
+            "color": "red",
+            "redirect": t_url
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    if request.method == "GET":
+        form = TournamentForm(instance=tournament)
+
+        min_date = tournament.application_deadline
+        context = {"tournament": tournament,
+                   "form": form,
+                   "minDate": f"{min_date.year}-{min_date.month}-{min_date.day}"}
+        return render(request, 'tournaments/tournament_edit.html', context)
+
+    elif request.method == "POST":
+        form = TournamentForm(request.POST, instance=tournament)
+        if form.is_valid():
+            form.save()
+            context = {
+                "message": "Changes saved.",
+                "color": "green",
+                "redirect": t_url
+            }
+            return render(request, 'message_and_redirect.html', context)
+
+
+@login_required
+def tournament_add_sponsor(request, id):
+    try:
+        tournament = Tournament.objects.get(id=id)
+    except Tournament.DoesNotExist:
+        context = {
+            "message": "Tournament does not exist!",
+            "color": "red",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    t_url = reverse('tournament_details', kwargs={"pk": tournament.id})
+
+    if tournament.creator != request.user:
+        context = {
+            "message": "You're not allowed to access this page.",
+            "color": "red",
+            "redirect": t_url
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    if request.method == "GET":
+        form = SponsorForm()
+        form.initial['tournament'] = tournament
+        return render(request, 'tournaments/add_sponsor.html', {"form": form})
+
+    elif request.method == "POST":
+        form = SponsorForm(request.POST, request.FILES)
+        form.tournament = tournament
+        if form.is_valid():
+            form.save()
+            context = {
+                "message": "Sponsor added successfully.",
+                "color": "green",
+                "redirect": t_url
+            }
+            return render(request, 'message_and_redirect.html', context)
+
+        return render(request, 'tournaments/add_sponsor.html', {"form": form})
+
+
+class EncounterDetailView(DetailView):
+    model = Encounter
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['participant'] = self.request.user in (
+            context['encounter'].participant1.user, context['encounter'].participant2.user)
+        if context['encounter'].whoami(self.request.user) == 1:
+            context['winner_set'] = context['encounter'].winner1 is not None
+        elif context['encounter'].whoami(self.request.user) == 2:
+            context['winner_set'] = context['encounter'].winner2 is not None
+
+        return context
+
+
+def set_winner(request, pk, winner):
+    try:
+        encounter = Encounter.objects.get(id=pk)
+    except Encounter.DoesNotExist:
+        context = {
+            "message": "This encounter does not exist.",
+            "color": "red",
+            "redirect": "/"
+        }
+        return render(request, 'message_and_redirect.html', context)
+
+    if encounter.set_winner(request.user, winner):
+        context = {
+            "message": "Your answer has been saved correctly.",
+            "color": "green",
+            "redirect": reverse("encounter", kwargs={"pk": pk})
+        }
+        return render(request, 'message_and_redirect.html', context)
+    else:
+        context = {
+            "message": "Your answer is inconsistent with other player's answer. You must provide answers one more time.",
+            "color": "red",
+            "redirect": reverse("encounter", kwargs={"pk": pk})
+        }
+        return render(request, 'message_and_redirect.html', context)

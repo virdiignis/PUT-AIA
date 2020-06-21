@@ -5,18 +5,20 @@
     <h2>Sign up</h2>
     <form method="post">
         {% csrf_token %}
-        {% for field in form %}
-            <p>
-                {{ field.label_tag }}<br>
-                {{ field }}
-                {#        {% if field.help_text %}#}
-                {#          <small style="display: none">{{ field.help_text }}</small>#}
-                {#        {% endif %}#}
-                {% for error in field.errors %}
-                    <p style="color: red">{{ error }}</p>
-                {% endfor %}
-            </p>
+        {% for field in form.visible_fields %}
+            <div class="form-group row">
+                <label class="col-sm-2 col-form-label">{{ field.label_tag }}</label>
+                <div class="col-sm-10">
+                    {{ field }}
+                </div>
+            </div>
+
+            {% for error in field.errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
         {% endfor %}
-        <button type="submit">Sign up</button>
+        <button type="submit" class="btn btn-primary">Sign up</button>
     </form>
 {% endblock %}

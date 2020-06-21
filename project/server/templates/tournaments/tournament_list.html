@@ -1,27 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <form target="" method="get">
-        <label>
-            Search:
-            <input type="text" name="search"/>
-        </label>
-        <input type="submit">
+    <h2>Upcoming tournaments</h2>
+    <form method="get">
+        <div class="form-group">
+            <label class="col-sm-2 col-form-label">
+                Search:
+                <input type="text" name="search" class="col-sm-10"/>
+            </label>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
     </form>
-    <table>
+    <table class="table">
+        <thead class="thead-light">
         <tr>
-            <th>Name</th>
-            <th>|</th>
-            <th>Place</th>
-            <th>|</th>
-            <th>Time</th>
+            <th scope="col">Name</th>
+            <th scope="col">Place</th>
+            <th scope="col">Time</th>
         </tr>
+        </thead>
         {% for tournament in page_obj %}
             <tr>
-                <td><a href={% url 'tournament_details' tournament.id %}>{{ tournament.name }}</a></td>
-                <td>|</td>
+                <td><a href={% url 'tournament_details' tournament.id %}>{{ tournament }}</a></td>
                 <td>{{ tournament.place }}</td>
-                <td>|</td>
                 <td>{{ tournament.time }}</td>
             </tr>
         {% endfor %}
@@ -29,8 +30,8 @@
     <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            <a href="?search={{ search }}&page=1">&laquo; first</a>
+            <a href="?search={{ search }}&page={{ page_obj.previous_page_number }}">previous</a>
         {% endif %}
 
         <span class="current">
@@ -38,9 +39,10 @@
         </span>
 
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            <a href="?search={{ search }}&page={{ page_obj.next_page_number }}">next</a>
+            <a href="?search={{ search }}&page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
         {% endif %}
     </span>
     </div>
+    <a href="{% url "tournament_new" %}" class="btn btn-primary float-right">Create new</a>
 {% endblock %}

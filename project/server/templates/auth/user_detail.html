@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2 class="card-title">{{ user.first_name }} {{ user.last_name }}</h2>
+    email: <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+
+    <div class="card">
+        <div class="card-header"><h2>Registered for tournaments</h2></div>
+        <div class="card-body">
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Place</th>
+                    <th scope="col">Time</th>
+                </tr>
+                </thead>
+                {% for tournament in tournaments %}
+                    <tr>
+                        <td><a href={% url 'tournament_details' tournament.id %}>{{ tournament }}</a></td>
+                        <td>{{ tournament.place }}</td>
+                        <td>{{ tournament.time }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>Upcoming encounters</h2></div>
+        <div class="card-body">
+            <table class="table">
+                <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Tournament</th>
+                    <th scope="col">Encounter</th>
+                </tr>
+                </thead>
+                {% for encounter in encounters %}
+                    <tr>
+                        <td>
+                            <a href={% url 'tournament_details' encounter.tournament_id %}>{{ encounter.tournament }}</a>
+                        </td>
+                        <td>
+                            <a href={% url "encounter" encounter.id %}>{{ encounter }}</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
