@@ -4,9 +4,6 @@
         <div>
             <p>
             <h2 class="card-title">Tournament name: <b>{{ tournament }}</b></h2>
-            {% if is_creator %}
-                <a href="{% url "tournament_edit" tournament.id %}" class="btn btn-primary">Edit</a>
-            {% endif %}
             <br>Date: <b>{{ tournament.time }}</b>
             <br>Submission deadline:
             <b style="color:{% if deadline_exceeded %}red{% else %}green{% endif %}">{{ tournament.application_deadline }}</b>
@@ -16,8 +13,12 @@
             </p>
 
             <p>
+                {% if is_creator %}
+                    <a href="{% url "tournament_edit" tournament.id %}" class="btn btn-primary">Edit</a>
+                {% endif %}
                 <a href="{% url 'tournament_signup' tournament.id %}"
-                   class="btn btn-primary {% if full or signed_up or deadline_exceeded %}disabled{% endif %}">
+                   class="btn btn-primary {% if full or signed_up or deadline_exceeded %}disabled{% endif %}"
+                   style="background: {% if signed_up or not full and not deadline_exceeded %}green{% else %}gray{% endif %}">
                     {% if signed_up %}
                         You're already signed up
                     {% elif full %}
@@ -38,6 +39,83 @@
             </iframe>
         </div>
     </div>
+
+    {% if tournament.encounters.exists %}
+        <div class="card">
+            <div class="card-header"><h2>Upcoming encounters</h2></div>
+            <div class="card-body">
+                {% if not finished %}
+                    <table class="table">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th scope="col">Participant 1. rank</th>
+                            <th scope="col">Participant 1. points</th>
+                            <th scope="col">Encounter</th>
+                            <th scope="col">Participant 2. points</th>
+                            <th scope="col">Participant 2. rank</th>
+                        </tr>
+                        </thead>
+                        {% for encounter in encounters %}
+                            <tr>
+                                <td>
+                                    <a href={% url "profile" encounter.participant1.id %}>{{ encounter.participant1.ranking }}</a>
+                                </td>
+                                <td>
+                                    <b>{{ encounter.participant1.points }}p.</b>
+                                </td>
+
+                                <td>
+                                    <a href={% url "encounter" encounter.id %}>{{ encounter }}</a>
+                                </td>
+                                <td>
+                                    <b>{{ encounter.participant2.points }}p.</b>
+                                </td>
+                                <td>
+                                    <a href={% url "profile" encounter.participant2.id %}>{{ encounter.participant2.ranking }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    Tournament is finished. All encounters took place. See the scoreboard below!
+                {% endif %}
+            </div>
+
+        </div>
+    {% endif %}
+
+    {% if tournament.encounters.exists %}
+        <div class="card">
+            <div class="card-header"><h2>Scoreboard</h2></div>
+            <div class="card-body">
+                <table class="table">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Participant</th>
+                        <th scope="col">Participant rank</th>
+                        <th scope="col">Participant points</th>
+                    </tr>
+                    </thead>
+                    {% for participant in scoreboard %}
+                        <tr>
+                            <td>
+                                <a href={% url "profile" participant.id %}>{{ participant }}</a>
+                            </td>
+                            <td>
+                                <b>{{ participant.ranking }}</b>
+                            </td>
+
+                            <td>
+                                <b>{{ participant.points }}p.</b>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+
 
     {% if tournament.sponsors.exists %}
         <p>

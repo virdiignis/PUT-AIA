@@ -1,10 +1,71 @@
 {% extends "base.html" %}
 
 {% block content %}
+    <div class="modal fade" id="confirmationModal1" tabindex="-1" role="dialog"
+         aria-labelledby="confirmationModalLabel1"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel1">Confirm action</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    This action is irreversible. Are you sure you want to continue?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Abort</button>
+                    <a href="{% url "winner" encounter.id 1 %}" class="btn btn-primary">Confirm</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="confirmationModal2" tabindex="-1" role="dialog"
+         aria-labelledby="confirmationModalLabel2"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel2">Confirm action</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    This action is irreversible. Are you sure you want to continue?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Abort</button>
+                    <a href="{% url "winner" encounter.id 2 %}" class="btn btn-primary">Confirm</a>
+
+                </div>
+            </div>
+        </div>
+    </div>
     <h2>{{ encounter }}</h2>
     {{ encounter.tournament.time }}
     as part of
     <a href="{% url "tournament_details" encounter.tournament_id %}">{{ encounter.tournament }}</a>
+
+    <p>
+        <b><a href="{% url "profile" encounter.participant1.user_id %}"> {{ encounter.participant1 }}</a></b>
+        ranked {{ encounter.participant1.ranking }}
+        <br>
+        <b><a href="{% url "profile" encounter.participant2.user_id %}">{{ encounter.participant2 }}</a></b>
+        ranked {{ encounter.participant2.ranking }}
+    </p>
+
+    {% if encounter.agreed %}
+        <p>
+            <b style="color: green"> {{ encounter.winner1 }} </b> won the encounter! Congratulations.
+        </p>
+    {% else %}
+        <p>
+            Awaiting responses on the winner from contestants.
+        </p>
+    {% endif %}
     {% if participant and not encounter.agreed and not winner_set %}
         <form>
             <label>
@@ -12,16 +73,16 @@
             </label>
             <br>
             <div class="btn-group">
-                <a href="{% url "winner" encounter.id 1 %}" class="btn btn-primary"
-                   style="background: green">{{ encounter.participant1 }}</a>
-                <a href="{% url "winner" encounter.id 2 %}" class="btn btn-primary"
-                   style="background: red">{{ encounter.participant2 }}</a>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmationModal1"
+                        style="background: green">
+                    {{ encounter.participant1 }}
+                </button>
+
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmationModal2"
+                        style="background: red">
+                    {{ encounter.participant2 }}
+                </button>
             </div>
         </form>
-    {% endif %}
-    {% if encounter.agreed %}
-        <p>
-            <b style="color: green"> {{ encounter.winner1 }} </b> won the encounter! Congratulations.
-        </p>
     {% endif %}
 {% endblock %}

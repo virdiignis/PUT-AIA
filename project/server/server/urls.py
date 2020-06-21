@@ -1,7 +1,6 @@
 from django.conf.urls import url
 from django.contrib.staticfiles.urls import static, staticfiles_urlpatterns
 from django.urls import path, include
-from django.views.generic import TemplateView
 from django.contrib import admin
 
 from server import settings
@@ -20,7 +19,7 @@ urlpatterns = [
     path('tournaments/<int:pk>/singup/', views.tournament_signup, name='tournament_signup'),
     path('tournaments/<int:pk>/', views.TournamentDetailView.as_view(), name='tournament_details'),
     path('encounters/<int:pk>/', views.EncounterDetailView.as_view(), name='encounter'),
-    path('encounters/<int:pk>/winner/<int:winner>/', views.set_winner, name='winner'),
+    path('encounters/<int:pk>/winner/<int:winner>/', views.encounter_set_winner, name='winner'),
     path('admin/', admin.site.urls),
 ]
 

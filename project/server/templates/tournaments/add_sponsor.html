@@ -1,7 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <form method="post" enctype="multipart/form-data">
+    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirm action</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    This action is irreversible. Are you sure you want to continue?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Abort</button>
+                    <button type="submit" class="btn btn-primary" form="sponsorForm">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="sponsorForm">
         {% csrf_token %}
         {{ form.tournament }}
         <div class="form-group row">
@@ -21,7 +42,10 @@
                 </div>
             {% endif %}
         </div>
-        <button type="submit" class="btn btn-primary">Save</button>
+        {#        <button type="submit" class="btn btn-primary">Save</button>#}
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#confirmationModal">
+            Save
+        </button>
     </form>
 
     {% if form.errors %}

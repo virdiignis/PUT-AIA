@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotModified, HttpResponseNotFound, \
-    HttpResponseForbidden
+from django.db.models import Q
+from django.http import HttpResponseNotFound
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.urls import reverse
@@ -104,6 +104,9 @@ class TournamentDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['deadline_exceeded'] = timezone.now() > context['tournament'].application_deadline
+        if context['deadline_exceeded']:
+            context['tournament'].create_encounters()
+
         context["is_creator"] = context['tournament'].creator == context['view'].request.user
         context["full"] = context['tournament'].max_participants == context['tournament'].participants.count()
         try:
@@ -112,6 +115,12 @@ class TournamentDetailView(DetailView):
             context["signed_up"] = False
         else:
             context["signed_up"] = True
+
+        encounters = context["tournament"].encounters
+        context["encounters"] = encounters.filter(agreed=False)
+        context["finished"] = all(encounters.values_list("agreed", flat=True))
+        participants = context["tournament"].participants.all()
+        context["scoreboard"] = sorted(participants, key=lambda p: -p.points)
 
         return context
 
@@ -123,7 +132,7 @@ class Profile(DetailView):
         context = super().get_context_data(**kwargs)
         context["tournaments"] = Tournament.objects.filter(participants__user=context['user'])
         context["encounters"] = Encounter.objects.filter(
-            Q(participant1__user=context["user"]) | Q(participant2__user=context["user"]))
+            Q(participant1__user=context["user"]) | Q(participant2__user=context["user"]), Q(agreed=False))
 
         return context
 
@@ -309,7 +318,7 @@ class EncounterDetailView(DetailView):
         return context
 
 
-def set_winner(request, pk, winner):
+def encounter_set_winner(request, pk, winner):
     try:
         encounter = Encounter.objects.get(id=pk)
     except Encounter.DoesNotExist:
